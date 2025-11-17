@@ -1,0 +1,46 @@
+name: Convert MD to PDF and Upload to S3
+
+on:
+  push:
+    paths:
+      - "**.md"   # Trigger when Markdown files are pushed
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2. Install pandoc and LaTeX (for PDF generation)
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+
+      # 3. Convert Markdown to PDF
+      - name: Convert MD to PDF
+        run: |
+          for file in $(find . -name "*.md"); do
+            pandoc "$file" -o "${file%.md}.pdf"
+          done
+
+      # 4. Install rclone
+      - name: Install rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+
+      # 5. Configure rclone (using GitHub Secrets)
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+
+      # 6. Upload PDFs to S3
+      - name: Upload to S3
+        run: |
+          rclone copy *.pdf my_s3:mybucket/pdfs/
