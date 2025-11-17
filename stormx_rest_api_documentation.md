@@ -1,6 +1,6 @@
 ![TAConnections Logo](./images/ta-connections-logo-small.jpg)
 
-# StormX REST API Documentation
+# StormX REST API Documentation 
 
 Version $RELEASE_VERSION$
 
